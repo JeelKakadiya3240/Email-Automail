@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 import json
 from pathlib import Path
 import shutil
-import pandas as pd
+import csv
 from apscheduler.schedulers.background import BackgroundScheduler
 import pytz
 
@@ -40,7 +40,7 @@ def rate_limit(f):
     return decorated_function
 
 def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() == 'pdf'
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ['pdf', 'csv']
 
 # Get the directory where app.py is located
 BASE_DIR = Path(__file__).resolve().parent
@@ -361,9 +361,11 @@ def send_bulk_email():
             excel_file = request.files.get('excelFile')
             attachment = request.files.get('attachment')
             
-            # Read Excel file
-            df = pd.read_excel(excel_file)
-            total_emails = len(df)
+            # Read CSV file
+            csv_content = excel_file.read().decode('utf-8')
+            csv_reader = csv.DictReader(csv_content.splitlines())
+            rows = list(csv_reader)
+            total_emails = len(rows)
             
             # Save attachment if provided
             attachment_path = None
@@ -382,7 +384,7 @@ def send_bulk_email():
                 return
 
             # Process each email
-            for index, row in df.iterrows():
+            for index, row in enumerate(rows):
                 try:
                     email = row['email']
                     name = row.get('name', '')
