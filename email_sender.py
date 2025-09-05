@@ -9,14 +9,24 @@ class EmailConfig:
     """Email configuration settings"""
     SMTP_SERVER = "smtp.gmail.com"
     SMTP_PORT = 587
-    SENDER_EMAIL = os.getenv("SENDER_EMAIL", "jkakadi1@asu.edu")
-    SENDER_PASSWORD = os.getenv("SENDER_PASSWORD", "pktj axdd kmtb rzaq")
+    SENDER_EMAIL = os.getenv("SENDER_EMAIL")
+    SENDER_PASSWORD = os.getenv("SENDER_PASSWORD")
+    
+    @classmethod
+    def validate_config(cls):
+        """Validate that required environment variables are set"""
+        if not cls.SENDER_EMAIL:
+            raise ValueError("SENDER_EMAIL environment variable is required")
+        if not cls.SENDER_PASSWORD:
+            raise ValueError("SENDER_PASSWORD environment variable is required")
 
 class EmailSender:
     """Handles email sending operations"""
     
     def __init__(self, config: EmailConfig = EmailConfig):
         self.config = config
+        # Validate configuration on initialization
+        self.config.validate_config()
 
     def validate_email(self, email: str) -> bool:
         """Basic email format validation"""
